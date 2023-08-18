@@ -56,9 +56,9 @@ app.all('/*', cors({
     methods: ['GET', 'HEAD', 'PUT', 'POST', 'PATCH', 'DELETE'],
     origin: '*',
 }), async (req, res) => {
-    if (!`${req.headers['content-type']}`.includes('multipart')) {
+    if (!`${req.headers['content-type']}`.includes('multipart') && !(`${req.url}`.includes('.inspireui.com'))) {
         var url = `${req.url}`;
-        url = req.url.replace(/https:\/[^\/]/gi, function (x) {
+        url = url.replace(/https:\/[^\/]/gi, function (x) {
             return x.replace('https:/', 'https://');
         });
         var x_proxy_domain = req.headers['x-proxy-domain'];
@@ -68,7 +68,7 @@ app.all('/*', cors({
         while (url.length > 0 && url[0] == '/') {
             url = url.substring(1, url.length);
         }
-        var headers = Object(req.headers);
+        var headers = {...req.headers};
         delete headers['host'];
         delete headers['connection'];
         delete headers['cache-control'];
@@ -94,16 +94,21 @@ app.all('/*', cors({
                 var options = {
                     url: url,
                     method: req.method,
-                    headers: req.headers,
+                    headers: headers,
                     form: req.body,
                 };
                 var response = await promisifiedRequest(options);
+                var body;
                 try {
-                    var body = JSON.parse(response.body);
-                    return res.json(body);
+                    body = JSON.parse(response.body);
                 } catch (e) {
+                    console.log(e);
+                }
+                if (body != undefined) {
+                    return res.json(body);
                 }
             } catch (e) {
+                console.log(e);
             }
         }
     }
