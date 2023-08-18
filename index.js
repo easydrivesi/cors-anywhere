@@ -56,54 +56,55 @@ app.all('/*', cors({
     methods: ['GET', 'HEAD', 'PUT', 'POST', 'PATCH', 'DELETE'],
     origin: '*',
 }), async (req, res) => {
-    var url = req.url.replace(/https:\/[^\/]/gi, function (x) {
-        return x.replace('https:/', 'https://');
-    });
-    var x_proxy_domain = req.headers['x-proxy-domain'];
-    if (x_proxy_domain != null) {
-        url = '/' + x_proxy_domain;
-    }
-    while (url.length > 0 && url[0] == '/') {
-        url = url.substring(1, url.length);
-    }
-    var headers = Object(req.headers);
-    delete headers['host'];
-    delete headers['connection'];
-    delete headers['cache-control'];
-    delete headers['user-agent'];
-    delete headers['sec-fetch-mode'];
-    delete headers['sec-fetch-site'];
-    delete headers['sec-ch-ua'];
-    delete headers['sec-ch-ua-mobile'];
-    delete headers['sec-ch-ua-platform'];
-    delete headers['upgrade-insecure-requests'];
-    delete headers['accept'];
-    delete headers['sec-fetch-user'];
-    delete headers['sec-fetch-dest'];
-    delete headers['accept-encoding'];
-    delete headers['accept-language'];
-    delete headers['x-proxy-domain'];
-
-
-    if (url.length > 0 && !`${headers['content-type']}`.includes('multipart')) {
-        try {
-            if (!url.startsWith('http') && !url.includes('http')) {
-                url = 'https://' + url;
-            }
-            new URL(url);
-            var options = {
-                url: url,
-                method: req.method,
-                headers: req.headers,
-                form: req.body,
-            };
-            var response = await promisifiedRequest(options);
+    if (!`${req.headers['content-type']}`.includes('multipart')) {
+        var url = `${req.url}`;
+        url = req.url.replace(/https:\/[^\/]/gi, function (x) {
+            return x.replace('https:/', 'https://');
+        });
+        var x_proxy_domain = req.headers['x-proxy-domain'];
+        if (x_proxy_domain != null) {
+            url = '/' + x_proxy_domain;
+        }
+        while (url.length > 0 && url[0] == '/') {
+            url = url.substring(1, url.length);
+        }
+        var headers = Object(req.headers);
+        delete headers['host'];
+        delete headers['connection'];
+        delete headers['cache-control'];
+        delete headers['user-agent'];
+        delete headers['sec-fetch-mode'];
+        delete headers['sec-fetch-site'];
+        delete headers['sec-ch-ua'];
+        delete headers['sec-ch-ua-mobile'];
+        delete headers['sec-ch-ua-platform'];
+        delete headers['upgrade-insecure-requests'];
+        delete headers['accept'];
+        delete headers['sec-fetch-user'];
+        delete headers['sec-fetch-dest'];
+        delete headers['accept-encoding'];
+        delete headers['accept-language'];
+        delete headers['x-proxy-domain'];
+        if (url.length > 0) {
             try {
-                var body = JSON.parse(response.body);
-                return res.json(body);
+                if (!url.startsWith('http') && !url.includes('http')) {
+                    url = 'https://' + url;
+                }
+                new URL(url);
+                var options = {
+                    url: url,
+                    method: req.method,
+                    headers: req.headers,
+                    form: req.body,
+                };
+                var response = await promisifiedRequest(options);
+                try {
+                    var body = JSON.parse(response.body);
+                    return res.json(body);
+                } catch (e) {
+                }
             } catch (e) {
             }
-        } catch (e) {
         }
     }
     proxy.emit('request', req, res);
