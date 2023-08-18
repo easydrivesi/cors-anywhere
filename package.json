@@ -28,8 +28,15 @@
     "server.js"
   ],
   "dependencies": {
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
     "http-proxy": "1.11.1",
-    "proxy-from-env": "0.0.1"
+    "morgan": "^1.10.0",
+    "nocache": "^4.0.0",
+    "path": "^0.12.7",
+    "proxy-from-env": "0.0.1",
+    "request": "^2.88.2"
   },
   "devDependencies": {
     "coveralls": "^2.11.6",
@@ -41,9 +48,8 @@
     "supertest": "^2.0.1"
   },
   "scripts": {
-    "lint": "eslint .",
-    "test": "mocha ./test/test*.js --reporter spec",
-    "test-coverage": "istanbul cover ./node_modules/.bin/_mocha -- test/test.js test/test-ratelimit.js --reporter spec"
+    "dev": "nodemon ./index.js",
+    "start": "node index.js"
   },
   "engines": {
     "node": ">=0.10.0"
