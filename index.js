@@ -1,12 +1,13 @@
 const express = require("express");
-const request = require("request");
+const fetch = (...args) =>
+    import('node-fetch').then(({ default: fetch }) => fetch(...args));
 const path = require("path");
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const cors = require('cors');
 const nocache = require('nocache');
 const app = express();
-const port = process.env.PORT || "8000";
+const port = process.env.PORT || "8080";
 app.use(cors())
 app.use(logger('dev'));
 app.use(express.json());
@@ -56,7 +57,7 @@ app.all('/*', cors({
     methods: ['GET', 'HEAD', 'PUT', 'POST', 'PATCH', 'DELETE'],
     origin: '*',
 }), async (req, res) => {
-    if (!`${req.headers['content-type']}`.includes('multipart') && !(`${req.url}`.includes('.inspireui.com'))) {
+    if (!`${req.headers['content-type']}`.includes('multipart')) {
         var url = `${req.url}`;
         url = url.replace(/https:\/[^\/]/gi, function (x) {
             return x.replace('https:/', 'https://');
@@ -68,22 +69,9 @@ app.all('/*', cors({
         while (url.length > 0 && url[0] == '/') {
             url = url.substring(1, url.length);
         }
-        var headers = {...req.headers};
+        var headers = { ...req.headers };
         delete headers['host'];
-        delete headers['connection'];
-        delete headers['cache-control'];
-        delete headers['user-agent'];
-        delete headers['sec-fetch-mode'];
-        delete headers['sec-fetch-site'];
-        delete headers['sec-ch-ua'];
-        delete headers['sec-ch-ua-mobile'];
-        delete headers['sec-ch-ua-platform'];
-        delete headers['upgrade-insecure-requests'];
-        delete headers['accept'];
-        delete headers['sec-fetch-user'];
-        delete headers['sec-fetch-dest'];
         delete headers['accept-encoding'];
-        delete headers['accept-language'];
         delete headers['x-proxy-domain'];
         if (url.length > 0) {
             try {
@@ -91,16 +79,14 @@ app.all('/*', cors({
                     url = 'https://' + url;
                 }
                 new URL(url);
-                var options = {
-                    url: url,
+                var response = await fetch(url, {
                     method: req.method,
+                    body: JSON.stringify(req.body),
                     headers: headers,
-                    form: req.body,
-                };
-                var response = await promisifiedRequest(options);
+                });
                 var body;
                 try {
-                    body = JSON.parse(response.body);
+                    body = await response.json();
                 } catch (e) {
                     console.log(e);
                 }
